@@ -1,7 +1,9 @@
 pub mod generator {
+    use serde_json::Result;
     use std::{
         fs::{self},
-        process::{Command, Stdio},
+        path::Path,
+        process::Command,
     };
 
     pub fn generate(mut path: String) -> std::io::Result<()> {
@@ -10,9 +12,12 @@ pub mod generator {
         if !path.ends_with("/") {
             path = path + "/";
         }
-        fs::create_dir_all(String::from(&path) + "src/controller")?;
-        fs::create_dir_all(String::from(&path) + "src/model")?;
-        fs::create_dir_all(String::from(&path) + "src/view")?;
+        generate_dirs(&path).unwrap();
+        // generate_structure();
+
+        fs::File::create(String::from(&path) + "src/controllers/home.controller.rs")?;
+
+        fs::File::create(String::from(&path) + "src/views/home.view.rs")?;
         Ok(())
     }
 
@@ -21,11 +26,28 @@ pub mod generator {
         let dir_path = splitted_path.0.to_owned() + "/";
         let dir_name = splitted_path.1;
 
-        let mut cmd = Command::new("cargo")
+        Command::new("cargo")
             .current_dir(dir_path)
             .args(["new", dir_name])
             .output()
             .expect("Can't create the folder");
-        println!("{:?}", cmd);
+    }
+
+    fn generate_structure(path: &str) -> Result<bool> {
+        generate_dirs(path).unwrap();
+        
+        Ok(true)
+    }
+
+    fn generate_dirs(path: &str) -> Result<bool> {
+        let ref_path = Path::new("./src/references/dir_ref.json");
+        let dir_refs = fs::read_to_string(ref_path).expect("Unable to read dir_ref file");
+
+        let dir_refs_json: Vec<&str> = serde_json::from_str(&dir_refs)?;
+
+        for reference in dir_refs_json {
+            fs::create_dir_all(String::from(path) + "src/" + reference).unwrap();
+        }
+        Ok(true)
     }
 }

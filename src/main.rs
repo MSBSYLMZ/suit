@@ -1,8 +1,12 @@
-use std::env;
+use std::env::{self, Args};
 
 use suit::generator::generator::generate;
 fn main() {
-    let mut args = env::args();
+    let args = env::args();
+    run(args);
+}
+
+fn run(mut args: Args) {
     args.next().unwrap();
     let path = args.next().unwrap();
     generate(path).unwrap();
